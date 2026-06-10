@@ -1,0 +1,422 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+:root {
+  --gold: #c9a84c;
+  --gold-soft: #d8bd72;
+  --ivory: #efe7d4;
+  --ease-lux: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+body {
+  font-family: 'Montserrat', 'Century Gothic', 'Futura', sans-serif;
+  background: #080808;
+  color: #d8cdb8;
+  /* `clip` (not `hidden`) prevents horizontal scroll WITHOUT creating a
+     scroll container — which would otherwise break the sticky stacking. */
+  overflow-x: clip;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Old-money refinements ─────────────────────────────────────────────── */
+
+/* Elegant serif for figures + display headings (pairs with the sans labels) */
+.serif {
+  font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  font-feature-settings: 'liga' 1, 'lnum' 1;
+}
+
+/* Bespoke CTA: smooth gold transitions + a whisper of lift & glow */
+.btn-lux {
+  transition: background-color 0.5s var(--ease-lux), color 0.5s var(--ease-lux),
+    border-color 0.5s var(--ease-lux), box-shadow 0.5s var(--ease-lux),
+    transform 0.5s var(--ease-lux);
+}
+.btn-lux:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px -12px rgba(201, 168, 76, 0.55);
+}
+
+/* Refined link underline that grows from the centre on hover */
+.lux-underline {
+  position: relative;
+}
+.lux-underline::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -4px;
+  width: 0;
+  height: 1px;
+  background: var(--gold);
+  transition: width 0.5s var(--ease-lux), left 0.5s var(--ease-lux);
+}
+.lux-underline:hover::after {
+  left: 0;
+  width: 100%;
+}
+
+/* Smoother focus on form fields */
+.lux-field {
+  transition: border-color 0.45s var(--ease-lux), box-shadow 0.45s var(--ease-lux),
+    background-color 0.45s var(--ease-lux);
+}
+.lux-field:focus {
+  box-shadow: 0 0 0 1px rgba(201, 168, 76, 0.35), 0 0 22px -8px rgba(201, 168, 76, 0.5);
+}
+
+/* Range slider cross-browser */
+input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: #252525;
+  height: 2px;
+  outline: none;
+  cursor: pointer;
+}
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #c9a84c;
+  cursor: pointer;
+}
+input[type='range']::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #c9a84c;
+  cursor: pointer;
+  border: none;
+}
+
+/* Custom scroll bar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0f0f0f;
+}
+::-webkit-scrollbar-thumb {
+  background: #252525;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #c9a84c;
+}
+
+/* Remove default link styles */
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* ───────────────────────── Hero animated cloud sky ─────────────────────────
+   Self-contained: a deep night gradient, a twinkling starfield and several
+   cloud masses that drift at different speeds for a parallax, cinematic feel.
+   A real still dropped at /assets/hero-clouds.jpg overrides it via .hero-photo. */
+.hero-sky {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    radial-gradient(ellipse 80% 55% at 72% 12%, rgba(40, 48, 66, 0.5) 0%, transparent 60%),
+    radial-gradient(ellipse 130% 95% at 50% 6%, #1a2030 0%, #11151f 36%, #0b0e15 66%, #080808 100%);
+}
+
+/* Twinkling starfield across the upper sky */
+.hero-sky::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-repeat: no-repeat;
+  background-image:
+    radial-gradient(1.5px 1.5px at 8% 14%, rgba(255, 255, 255, 0.9), transparent 60%),
+    radial-gradient(1px 1px at 16% 8%, rgba(255, 255, 255, 0.65), transparent 60%),
+    radial-gradient(1.4px 1.4px at 24% 20%, rgba(255, 255, 255, 0.8), transparent 60%),
+    radial-gradient(1px 1px at 33% 6%, rgba(255, 255, 255, 0.6), transparent 60%),
+    radial-gradient(1.5px 1.5px at 39% 16%, rgba(255, 255, 255, 0.85), transparent 60%),
+    radial-gradient(1px 1px at 47% 26%, rgba(255, 255, 255, 0.5), transparent 60%),
+    radial-gradient(1.3px 1.3px at 55% 10%, rgba(255, 255, 255, 0.8), transparent 60%),
+    radial-gradient(1px 1px at 63% 19%, rgba(255, 255, 255, 0.6), transparent 60%),
+    radial-gradient(1.5px 1.5px at 70% 7%, rgba(255, 255, 255, 0.9), transparent 60%),
+    radial-gradient(1px 1px at 78% 22%, rgba(255, 255, 255, 0.55), transparent 60%),
+    radial-gradient(1.2px 1.2px at 86% 13%, rgba(255, 255, 255, 0.8), transparent 60%),
+    radial-gradient(1px 1px at 93% 9%, rgba(255, 255, 255, 0.6), transparent 60%);
+  animation: heroTwinkle 7s ease-in-out infinite;
+}
+
+/* Drifting cloud masses */
+.hero-cloud {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(30px);
+  pointer-events: none;
+  will-change: transform;
+}
+.hero-cloud--1 {
+  width: 72%;
+  height: 58%;
+  left: -16%;
+  bottom: -16%;
+  opacity: 0.9;
+  background: radial-gradient(ellipse at 50% 50%, rgba(231, 227, 214, 0.82) 0%, rgba(150, 156, 172, 0.42) 44%, transparent 70%);
+  animation: heroFloatR 58s ease-in-out infinite alternate;
+}
+.hero-cloud--2 {
+  width: 78%;
+  height: 60%;
+  right: -18%;
+  bottom: -20%;
+  opacity: 0.9;
+  background: radial-gradient(ellipse at 50% 50%, rgba(224, 220, 208, 0.78) 0%, rgba(128, 134, 150, 0.4) 46%, transparent 72%);
+  animation: heroFloatL 72s ease-in-out infinite alternate;
+}
+.hero-cloud--3 {
+  width: 58%;
+  height: 46%;
+  right: -12%;
+  top: -16%;
+  opacity: 0.72;
+  background: radial-gradient(ellipse at 50% 50%, rgba(200, 204, 216, 0.6) 0%, rgba(96, 102, 120, 0.34) 50%, transparent 72%);
+  animation: heroFloatL 86s ease-in-out infinite alternate;
+}
+.hero-cloud--4 {
+  width: 50%;
+  height: 44%;
+  left: -14%;
+  top: 26%;
+  opacity: 0.62;
+  background: radial-gradient(ellipse at 50% 50%, rgba(208, 212, 222, 0.52) 0%, rgba(104, 110, 128, 0.3) 52%, transparent 74%);
+  animation: heroFloatR 80s ease-in-out infinite alternate;
+}
+.hero-cloud--5 {
+  width: 124%;
+  height: 40%;
+  left: -12%;
+  bottom: -12%;
+  opacity: 0.8;
+  filter: blur(40px);
+  background: radial-gradient(ellipse at 50% 60%, rgba(226, 222, 208, 0.66) 0%, rgba(126, 132, 148, 0.34) 50%, transparent 76%);
+  animation: heroFloatR 96s ease-in-out infinite alternate;
+}
+
+/* Real-photo override — see comment in App.tsx hero */
+.hero-photo {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: url('/assets/hero-clouds.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  animation: heroKenBurns 52s ease-in-out infinite alternate;
+}
+
+@keyframes heroTwinkle {
+  0%, 100% { opacity: 0.45; }
+  50%      { opacity: 1; }
+}
+@keyframes heroFloatR {
+  from { transform: translate3d(-7%, 2%, 0) scale(1.03); }
+  to   { transform: translate3d(8%, -3%, 0) scale(1.15); }
+}
+@keyframes heroFloatL {
+  from { transform: translate3d(7%, -2%, 0) scale(1.12); }
+  to   { transform: translate3d(-8%, 3%, 0) scale(1.02); }
+}
+@keyframes heroKenBurns {
+  from { transform: scale(1.06) translate(0, 0); }
+  to   { transform: scale(1.2) translate(-2.5%, -2.5%); }
+}
+
+/* Respect reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .hero-sky::before,
+  .hero-cloud,
+  .hero-photo {
+    animation: none !important;
+  }
+}
+
+/* ───────────────────────── Sticky stacking sections ─────────────────────────
+   Each section pins to the top of the viewport and the next section slides up
+   over it like a dealt card. Tall panels get a negative `top` from JS so their
+   content scrolls fully into view before they pin. */
+.stack {
+  position: relative;
+  z-index: 0;            /* own stacking context — keeps panels below the navbar */
+}
+
+.stack-panel {
+  position: sticky;
+  top: 0;                /* JS overrides for panels taller than the viewport */
+  min-height: 100vh;
+  transform-origin: center top;
+  will-change: transform;
+  border-top-left-radius: 26px;
+  border-top-right-radius: 26px;
+  border-top: 1px solid rgba(201, 168, 76, 0.18);
+  box-shadow: 0 -22px 48px -10px rgba(0, 0, 0, 0.65);
+  overflow: hidden;
+}
+/* First panel (hero) sits flush — no raised card lip */
+.stack-panel:first-child {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  border-top: none;
+  box-shadow: none;
+}
+
+/* Veil that fades in as a panel gets buried beneath the next one */
+.stack-dim {
+  position: absolute;
+  inset: 0;
+  background: #050505;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 40;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stack-panel {
+    position: relative;
+    top: 0 !important;
+    transform: none !important;
+    box-shadow: none;
+  }
+  .stack-dim {
+    display: none;
+  }
+}
+
+/* ───────────────────────── Interactive honeycomb background ─────────────────────────
+   A live SVG hex grid. Each hexagon lights up to a lighter gray with a golden
+   border the instant the cursor passes over it (fast :hover transition), then
+   fades back slowly (the base transition) — leaving a trailing gold glow. */
+.hex-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: #0d0d0d;
+}
+.hex {
+  fill: #161616;
+  stroke: rgba(201, 168, 76, 0.05);
+  stroke-width: 1.4;
+  transition: fill 0.6s ease, stroke 0.6s ease;
+}
+/* Scattered pre-lit hexagons, like the reference */
+.hex--gray {
+  fill: #242424;
+}
+.hex:hover {
+  fill: #3c3c3c;
+  stroke: #d8b860;
+  stroke-width: 1.7;
+  transition: fill 0.05s ease, stroke 0.05s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hex {
+    transition: none;
+  }
+}
+
+/* ───────────────────────── Hero bull animation ─────────────────────────
+   The bull is cut straight out of the source video: we crop to just the bull,
+   then `mix-blend-mode: screen` (with the darks crushed) drops the video's own
+   background so the glowing gold bull composites onto the live hexagons. A
+   one-time charge-in scales it up (closer) and slides it left. */
+.bull-stage {
+  position: relative;
+  aspect-ratio: 240 / 210; /* cropped bull region (px): x 360–600, y 195–405 */
+  overflow: hidden;
+  pointer-events: none;
+  /* NB: no transform/opacity here — either would create a stacking context
+     and break the video's mix-blend-mode against the hexagons behind it. */
+}
+.bull-stage video {
+  position: absolute;
+  width: 612.5%; /* 1470 / 240 — zoom so the bull fills the stage */
+  max-width: none; /* override Tailwind preflight's max-width:100% on video */
+  height: auto;
+  left: -150%; /* pan to the bull, stopping in the gap before the wordmark */
+  top: -92.86%;
+  mix-blend-mode: screen; /* drops the video's dark backdrop onto the hexagons */
+  filter: contrast(1.9) brightness(1.04) saturate(1.15);
+}
+
+/* ───────────────────────── Idle golden glint ─────────────────────────
+   While the hero sits still (`.is-idle`), a soft gold band sweeps across the
+   wordmark and the bull. Both are overlays (no `background-clip:text`, which
+   this renderer doesn't support): `multiply` turns the white letters gold as
+   it passes; `screen` brightens the gold bull. */
+.text-shine,
+.bull-shine {
+  position: absolute;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  background-size: 240% 100%;
+  background-position: 150% center;
+}
+.text-shine {
+  inset: -10% -4%;
+  background-image: linear-gradient(
+    105deg,
+    rgba(255, 255, 255, 0) 41%,
+    rgba(255, 224, 150, 0.55) 47%,
+    rgba(255, 198, 78, 0.95) 50%,
+    rgba(255, 224, 150, 0.55) 53%,
+    rgba(255, 255, 255, 0) 59%
+  );
+  background-size: 210% 100%;
+  /* `multiply` turns the white glyphs vivid gold; the thin band keeps the dark
+     gaps virtually unchanged (they're near-black already). */
+  mix-blend-mode: multiply;
+}
+.bull-shine {
+  inset: -12%;
+  background-image: linear-gradient(
+    105deg,
+    transparent 43%,
+    rgba(255, 243, 205, 0.5) 49%,
+    rgba(255, 233, 165, 0.78) 50%,
+    rgba(255, 243, 205, 0.5) 51%,
+    transparent 57%
+  );
+  mix-blend-mode: screen; /* brightens the gold bull as it sweeps */
+}
+.is-idle .text-shine {
+  animation: shineSweep 5s ease-in-out 1s infinite;
+}
+.is-idle .bull-shine {
+  animation: shineSweep 5s ease-in-out 0.7s infinite;
+}
+@keyframes shineSweep {
+  0% {
+    background-position: 150% center;
+  }
+  28% {
+    background-position: -50% center;
+  }
+  100% {
+    background-position: -50% center;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .is-idle .text-shine,
+  .is-idle .bull-shine {
+    animation: none;
+  }
+}
