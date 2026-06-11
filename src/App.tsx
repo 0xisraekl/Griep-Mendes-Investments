@@ -624,6 +624,9 @@ export default function App() {
             </FadeIn>
           ))}
           </div>
+          <p className="text-center text-[10px] tracking-[1px] text-[#706858]/80 mt-[42px] italic">
+            Past performance is not a guarantee of future results.
+          </p>
         </div>
 
         <div className="stack-dim" />

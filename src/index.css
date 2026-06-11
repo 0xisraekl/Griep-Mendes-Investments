@@ -244,27 +244,37 @@ a {
   inset: -10% -4%;
   background-image: linear-gradient(
     105deg,
-    rgba(255, 255, 255, 0) 41%,
-    rgba(255, 224, 150, 0.55) 47%,
-    rgba(255, 198, 78, 0.95) 50%,
-    rgba(255, 224, 150, 0.55) 53%,
-    rgba(255, 255, 255, 0) 59%
+    rgba(255, 224, 150, 0) 41%,
+    rgba(255, 214, 120, 0.6) 47%,
+    rgba(255, 198, 78, 1) 50%,
+    rgba(255, 214, 120, 0.6) 53%,
+    rgba(255, 224, 150, 0) 59%
   );
   background-size: 210% 100%;
-  /* `multiply` turns the white glyphs vivid gold; the thin band keeps the dark
-     gaps virtually unchanged (they're near-black already). */
-  mix-blend-mode: multiply;
+  /* `darken` = min(band, glyph): white letters become gold as the band passes,
+     while the near-black gaps stay unchanged — so the glint hugs the letters
+     instead of showing as a rectangle. */
+  mix-blend-mode: darken;
 }
 .bull-shine {
-  inset: -12%;
+  inset: 0;
   background-image: linear-gradient(
     105deg,
-    transparent 43%,
-    rgba(255, 243, 205, 0.5) 49%,
-    rgba(255, 233, 165, 0.78) 50%,
-    rgba(255, 243, 205, 0.5) 51%,
-    transparent 57%
+    transparent 38%,
+    rgba(255, 243, 205, 0.55) 49%,
+    rgba(255, 236, 176, 0.95) 50%,
+    rgba(255, 243, 205, 0.55) 51%,
+    transparent 62%
   );
+  /* Clip the glint to the bull's silhouette so it rides the bull, not a square */
+  -webkit-mask-image: url('/assets/bull.png');
+  mask-image: url('/assets/bull.png');
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center 49%;
+  mask-position: center 49%;
+  -webkit-mask-size: 80% auto;
+  mask-size: 80% auto;
   mix-blend-mode: screen; /* brightens the gold bull as it sweeps */
 }
 .is-idle .text-shine {
