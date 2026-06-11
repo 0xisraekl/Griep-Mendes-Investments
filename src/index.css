@@ -257,15 +257,16 @@ a {
 }
 .bull-shine {
   inset: 0;
+  /* A soft, gentle gold band — no white-hot core, so it reads as a sheen */
   background-image: linear-gradient(
     105deg,
-    transparent 40%,
-    rgba(255, 240, 195, 0.4) 46%,
-    rgba(255, 233, 168, 1) 50%,
-    rgba(255, 240, 195, 0.4) 54%,
-    transparent 60%
+    transparent 36%,
+    rgba(255, 233, 168, 0.18) 44%,
+    rgba(255, 228, 158, 0.62) 50%,
+    rgba(255, 233, 168, 0.18) 56%,
+    transparent 64%
   );
-  background-size: 235% 100%;
+  background-size: 250% 100%;
   /* Clip the glint to the bull's silhouette so it rides the bull, not a square */
   -webkit-mask-image: url('/assets/bull.png');
   mask-image: url('/assets/bull.png');
@@ -273,26 +274,28 @@ a {
   mask-repeat: no-repeat;
   -webkit-mask-position: center 49%;
   mask-position: center 49%;
-  -webkit-mask-size: 80% auto;
-  mask-size: 80% auto;
-  mix-blend-mode: screen; /* brightens the gold bull as it sweeps */
+  -webkit-mask-size: 78% auto;
+  mask-size: 78% auto;
+  /* `overlay` brightens the gold bull but leaves the dark areas dark — so no
+     grey "smoke" haze around the silhouette; just a gentle gold sheen. */
+  mix-blend-mode: overlay;
 }
 /* One coherent light: it crosses the bull, then flows into the letters */
 .is-idle .text-shine {
-  animation: shineSweep 6s cubic-bezier(0.33, 0, 0.18, 1) 0.85s infinite;
+  animation: shineSweep 7.5s cubic-bezier(0.4, 0, 0.15, 1) 1.05s infinite;
 }
 .is-idle .bull-shine {
-  animation: shineSweep 6s cubic-bezier(0.33, 0, 0.18, 1) 0.5s infinite;
+  animation: shineSweep 7.5s cubic-bezier(0.4, 0, 0.15, 1) 0.65s infinite;
 }
 @keyframes shineSweep {
   0% {
-    background-position: 165% center;
+    background-position: 170% center;
   }
-  25% {
-    background-position: -65% center;
+  30% {
+    background-position: -70% center;
   }
   100% {
-    background-position: -65% center;
+    background-position: -70% center;
   }
 }
 @media (prefers-reduced-motion: reduce) {
