@@ -295,49 +295,119 @@ export default function App() {
     };
   }, []);
 
-  // Scroll-driven bull: still (paused) when idle; gallops and runs to the left
-  // as you scroll down. Position uses `left` (not transform) so it doesn't
-  // create a stacking context that would break the video's screen-blend.
+  // Scroll-driven bull, smoothed in both directions: the stage glides toward
+  // its scroll target on a rAF loop (each wheel step lands as an ease, down
+  // and up alike) instead of snapping 1:1 with scrollY. Position still uses
+  // `left` (not transform) so the stage never gets a stacking context, which
+  // would break the video's screen-blend against the hexagons (see CSS).
+  //
+  // Playback stays inside the clip's clean segment, measured frame-by-frame:
+  // before ~1.5s the bull rides the right crop edge, past ~5.4s it hits the
+  // left edge, and the grading is richest gold from ~3.7s on. 5.0s is the
+  // hero pose. The bull only re-bases to the segment start at the moment it
+  // starts galloping, so the cut is masked by the onset of motion.
   useEffect(() => {
     const video = document.querySelector<HTMLVideoElement>('.bull-stage video');
     const stage = document.querySelector<HTMLElement>('.bull-stage');
     const hero = document.getElementById('hero');
     if (!video || !stage) return;
+    const reduceMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)',
+    ).matches;
     video.pause();
 
-    // The loop's grading drifts: early frames are blown-out cream, late frames
-    // a rich dark gold (past ~5.6s the bull also touches the crop edge). Land
-    // on the richest clean standing frame for the idle hero.
+    const PLAY_FROM = 1.5; // bull fully inside the crop from here…
+    const PLAY_TO = 5.4; // …until here
+    const IDLE_T = 5.0; // richest clean standing frame — the hero pose
     const seekIdleFrame = () => {
-      video.currentTime = 5.0;
+      video.currentTime = IDLE_T;
     };
     if (video.readyState >= 1) seekIdleFrame();
     else video.addEventListener('loadedmetadata', seekIdleFrame, { once: true });
 
+    const targetX = () =>
+      -Math.min(Math.max(window.scrollY / window.innerHeight, 0), 1) *
+      window.innerWidth *
+      0.5;
+    // Pinned hero is fully buried once the next panel has scrolled one
+    // viewport; past that nothing here can be seen, so nothing should run.
+    const heroVisible = () => window.scrollY < window.innerHeight;
+
+    let cur = targetX();
+    stage.style.left = `${cur.toFixed(2)}px`;
+
     let raf = 0;
-    let idle: number | undefined;
-    const place = () => {
-      raf = 0;
-      const p = Math.min(Math.max(window.scrollY / window.innerHeight, 0), 1);
-      stage.style.left = `${(-p * window.innerWidth * 0.5).toFixed(1)}px`;
-    };
-    const onScroll = () => {
-      hero?.classList.remove('is-idle'); // moving → stop the shimmer, run the bull
-      if (video.paused) video.play().catch(() => {});
-      window.clearTimeout(idle);
-      idle = window.setTimeout(() => {
-        video.pause(); // freeze the bull when idle
-        hero?.classList.add('is-idle'); // and let the golden glint sweep
-      }, 130);
-      if (!raf) raf = requestAnimationFrame(place);
+    let lastT = 0;
+    let lastScrollAt = 0;
+    let idleOn = false;
+    const setIdle = (on: boolean) => {
+      if (on === idleOn) return;
+      idleOn = on;
+      hero?.classList.toggle('is-idle', on);
     };
 
-    place();
-    hero?.classList.add('is-idle'); // still on load → shimmer active
+    const tick = (now: number) => {
+      const dt = Math.min(now - lastT || 16.7, 64);
+      lastT = now;
+      const target = targetX();
+      const d = target - cur;
+      // Exponential ease (~120ms time constant), frame-rate independent.
+      cur = Math.abs(d) < 0.3 ? target : cur + d * (1 - Math.exp(-dt / 120));
+      stage.style.left = `${cur.toFixed(2)}px`;
+
+      // Keep the gallop inside the clean segment, carrying the overshoot.
+      if (!video.paused && video.currentTime >= PLAY_TO) {
+        video.currentTime = PLAY_FROM + (video.currentTime - PLAY_TO);
+      }
+
+      if (cur === target && now - lastScrollAt > 160) {
+        video.pause(); // settled — freeze the bull where it stands
+        setIdle(heroVisible()); // …and let the glint sweep, if it can be seen
+        raf = 0;
+        return;
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    const wake = () => {
+      if (!raf) {
+        lastT = performance.now();
+        raf = requestAnimationFrame(tick);
+      }
+    };
+
+    const onScroll = () => {
+      lastScrollAt = performance.now();
+      if (reduceMotion) {
+        cur = targetX();
+        stage.style.left = `${cur.toFixed(2)}px`;
+        return;
+      }
+      setIdle(false);
+      if (video.paused && heroVisible()) {
+        // Re-base only when frozen too close to the segment's end to gallop
+        // (or outside it); the jump hides inside the start of motion.
+        if (video.currentTime < PLAY_FROM || video.currentTime > PLAY_TO - 1.2) {
+          video.currentTime = PLAY_FROM;
+        }
+        video.play().catch(() => {});
+      }
+      wake();
+    };
+    const onResize = () => {
+      if (reduceMotion) {
+        cur = targetX();
+        stage.style.left = `${cur.toFixed(2)}px`;
+        return;
+      }
+      wake();
+    };
+
+    setIdle(heroVisible()); // still on load → glint active (if hero shown)
     window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onResize);
     return () => {
       window.removeEventListener('scroll', onScroll);
-      window.clearTimeout(idle);
+      window.removeEventListener('resize', onResize);
       if (raf) cancelAnimationFrame(raf);
     };
   }, []);
