@@ -42,6 +42,9 @@ body {
   transform: translateY(-2px);
   box-shadow: 0 14px 30px -12px rgba(201, 168, 76, 0.55);
 }
+.btn-lux:disabled {
+  pointer-events: none; /* no hover lift mid-submit */
+}
 
 /* Refined link underline that grows from the centre on hover */
 .lux-underline {
@@ -225,82 +228,98 @@ a {
   top: -92.86%;
   mix-blend-mode: screen; /* drops the video's dark backdrop onto the hexagons */
   filter: contrast(1.9) brightness(1.04) saturate(1.15);
+  /* Trim the crop window itself (≈12px off the top, 8px off the right in
+     stage units): the source scene's wordmark glow leaks a faint grey strip
+     through the screen blend at the window's top-right. Safe on the video —
+     its own `filter` already makes a stacking context and the blend holds;
+     on the *stage* this would isolate (and kill) the blend. */
+  -webkit-clip-path: inset(32.63% 59.66% 35.71% 24.49%);
+  clip-path: inset(32.63% 59.66% 35.71% 24.49%);
 }
 
 /* ───────────────────────── Idle golden glint ─────────────────────────
-   While the hero sits still (`.is-idle`), a soft gold band sweeps across the
-   wordmark and the bull. Both are overlays (no `background-clip:text`, which
-   this renderer doesn't support): `multiply` turns the white letters gold as
-   it passes; `screen` brightens the gold bull. */
-.text-shine,
-.bull-shine {
-  position: absolute;
-  pointer-events: none;
-  background-repeat: no-repeat;
-  background-size: 240% 100%;
-  background-position: 150% center;
+   While the hero sits still (`.is-idle`), one soft gold light passes through
+   the lockup. The letters carry the glint inside their own glyphs
+   (`background-clip: text` — the band is a background layer, so it can only
+   paint where the letters are), and the bull catches it as a brightness
+   swell on the video's own pixels (its backdrop is screen-blended away, so
+   only the bull itself can light up). Nothing floats above the page, so the
+   light can never read as a box. */
+.glint-text {
+  color: var(--glint-base, #fff);
 }
-.text-shine {
-  inset: -12% -5%;
-  background-image: linear-gradient(
-    105deg,
-    rgba(255, 226, 150, 0) 36%,
-    rgba(255, 219, 132, 0.4) 44%,
-    rgba(255, 205, 92, 0.97) 50%,
-    rgba(255, 219, 132, 0.4) 56%,
-    rgba(255, 226, 150, 0) 64%
-  );
-  background-size: 225% 100%;
-  /* `darken` = min(band, glyph): white letters warm to gold as the band passes,
-     while the near-black gaps stay unchanged — so the glint hugs the letters. */
-  mix-blend-mode: darken;
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .glint-text {
+    background-image: linear-gradient(
+        105deg,
+        rgba(255, 226, 150, 0) 38%,
+        rgba(255, 219, 132, 0.5) 45%,
+        rgba(255, 205, 92, 0.98) 50%,
+        rgba(255, 219, 132, 0.5) 55%,
+        rgba(255, 226, 150, 0) 62%
+      ),
+      linear-gradient(var(--glint-base, #fff), var(--glint-base, #fff));
+    background-size: 225% 100%, 100% 100%;
+    background-position: 170% center, 0 0;
+    background-repeat: no-repeat;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    /* text-shadow would show through the transparent fill — drop-shadow
+       paints after the fill, giving the same depth without the smudge. */
+    text-shadow: none;
+    filter: drop-shadow(0 2px 16px rgba(0, 0, 0, 0.7));
+  }
 }
-.bull-shine {
-  inset: 0;
-  /* A soft, gentle gold band — no white-hot core, so it reads as a sheen */
-  background-image: linear-gradient(
-    105deg,
-    transparent 36%,
-    rgba(255, 233, 168, 0.18) 44%,
-    rgba(255, 228, 158, 0.62) 50%,
-    rgba(255, 233, 168, 0.18) 56%,
-    transparent 64%
-  );
-  background-size: 250% 100%;
-  /* Clip the glint to the bull's silhouette so it rides the bull, not a square */
-  -webkit-mask-image: url('/assets/bull.png');
-  mask-image: url('/assets/bull.png');
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-position: center 49%;
-  mask-position: center 49%;
-  -webkit-mask-size: 78% auto;
-  mask-size: 78% auto;
-  /* `overlay` brightens the gold bull but leaves the dark areas dark — so no
-     grey "smoke" haze around the silhouette; just a gentle gold sheen. */
-  mix-blend-mode: overlay;
+.glint-text--main {
+  --glint-base: #ffffff;
 }
-/* One coherent light: it crosses the bull, then flows into the letters */
-.is-idle .text-shine {
-  animation: shineSweep 7.5s cubic-bezier(0.4, 0, 0.15, 1) 1.05s infinite;
+.glint-text--sub {
+  --glint-base: #c9a84c;
 }
-.is-idle .bull-shine {
-  animation: shineSweep 7.5s cubic-bezier(0.4, 0, 0.15, 1) 0.65s infinite;
+
+/* One coherent light: it swells through the bull, then flows down the letters */
+.is-idle .glint-text--main {
+  animation: glintSweep 7.5s cubic-bezier(0.4, 0, 0.15, 1) 1.05s infinite;
 }
-@keyframes shineSweep {
+.is-idle .glint-text--sub {
+  animation: glintSweep 7.5s cubic-bezier(0.4, 0, 0.15, 1) 1.2s infinite;
+}
+@keyframes glintSweep {
   0% {
-    background-position: 170% center;
+    background-position: 170% center, 0 0;
   }
   30% {
-    background-position: -70% center;
+    background-position: -70% center, 0 0;
   }
   100% {
-    background-position: -70% center;
+    background-position: -70% center, 0 0;
   }
 }
+
+/* The bull catches the light first: a gentle gleam on the video's own pixels.
+   Must restate the video's full base filter in every keyframe. */
+.is-idle .bull-stage video {
+  animation: bullGleam 7.5s ease-in-out 0.45s infinite;
+}
+@keyframes bullGleam {
+  0%,
+  22%,
+  100% {
+    filter: contrast(1.9) brightness(1.04) saturate(1.15);
+  }
+  9% {
+    /* keep contrast pinned — lowering it lifts the dark floor and the bull
+       washes out pale; a modest brightness swell keeps the gold rich */
+    filter: contrast(1.9) brightness(1.17) saturate(1.28);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .is-idle .text-shine,
-  .is-idle .bull-shine {
+  .is-idle .glint-text--main,
+  .is-idle .glint-text--sub,
+  .is-idle .bull-stage video {
     animation: none;
   }
 }

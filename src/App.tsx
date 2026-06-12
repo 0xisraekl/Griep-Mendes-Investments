@@ -192,6 +192,7 @@ export default function App() {
   const [years, setYears] = useState(8);
   const [heroCount, setHeroCount] = useState(0);
   const [formSent, setFormSent] = useState(false);
+  const [formSending, setFormSending] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 70);
@@ -280,10 +281,15 @@ export default function App() {
     render();
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onResize);
-    const settle = window.setTimeout(onResize, 600); // after fonts/images settle
+    window.addEventListener('load', onResize);
+    // Re-measure when the web fonts actually arrive — panel heights shift with
+    // the swap, and stale `top` offsets make the pinning feel off.
+    document.fonts?.ready.then(onResize).catch(() => {});
+    const settle = window.setTimeout(onResize, 600); // fallback settle pass
     return () => {
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', onResize);
+      window.removeEventListener('load', onResize);
       window.clearTimeout(settle);
       if (raf) cancelAnimationFrame(raf);
     };
@@ -298,6 +304,15 @@ export default function App() {
     const hero = document.getElementById('hero');
     if (!video || !stage) return;
     video.pause();
+
+    // The loop's grading drifts: early frames are blown-out cream, late frames
+    // a rich dark gold (past ~5.6s the bull also touches the crop edge). Land
+    // on the richest clean standing frame for the idle hero.
+    const seekIdleFrame = () => {
+      video.currentTime = 5.0;
+    };
+    if (video.readyState >= 1) seekIdleFrame();
+    else video.addEventListener('loadedmetadata', seekIdleFrame, { once: true });
 
     let raf = 0;
     let idle: number | undefined;
@@ -514,14 +529,10 @@ export default function App() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-9 mb-[38px]">
             <div className="bull-stage w-[clamp(200px,38vw,400px)] shrink-0">
               <video src="/assets/bull-run.mp4" muted loop playsInline preload="auto" />
-              <span className="bull-shine" />
             </div>
-            <div
-              className="relative text-center sm:text-left"
-              style={{ textShadow: '0 2px 20px rgba(0,0,0,0.75)' }}
-            >
+            <div className="relative text-center sm:text-left">
               <div
-                className="text-white font-bold uppercase"
+                className="glint-text glint-text--main font-bold uppercase"
                 style={{
                   fontSize: 'clamp(40px, 7.6vw, 92px)',
                   letterSpacing: '0.05em',
@@ -533,12 +544,11 @@ export default function App() {
                 Mendes
               </div>
               <div
-                className="text-[#c9a84c] font-light uppercase mt-2 sm:mt-3"
+                className="glint-text glint-text--sub font-light uppercase mt-2 sm:mt-3"
                 style={{ fontSize: 'clamp(11px, 1.9vw, 20px)', letterSpacing: '0.5em' }}
               >
                 Investments
               </div>
-              <span className="text-shine" />
             </div>
           </div>
 
@@ -954,6 +964,8 @@ export default function App() {
                     <img
                       src={person.photo}
                       alt={person.name}
+                      loading="lazy"
+                      decoding="async"
                       className="w-full h-full object-cover object-top"
                       onError={e => {
                         const el = e.target as HTMLImageElement;
@@ -1082,6 +1094,7 @@ export default function App() {
                   className="flex flex-col gap-[18px]"
                   onSubmit={e => {
                     e.preventDefault();
+                    setFormSending(true);
                     setTimeout(() => setFormSent(true), 900);
                   }}
                 >
@@ -1148,9 +1161,10 @@ export default function App() {
 
                   <button
                     type="submit"
-                    className="btn-lux bg-[#c9a84c] text-[#080808] py-4 w-full text-[10px] font-semibold tracking-[3px] uppercase hover:bg-[#d8bd72]"
+                    disabled={formSending}
+                    className="btn-lux bg-[#c9a84c] text-[#080808] py-4 w-full text-[10px] font-semibold tracking-[3px] uppercase hover:bg-[#d8bd72] disabled:opacity-70 disabled:cursor-wait disabled:hover:bg-[#c9a84c]"
                   >
-                    Request a Meeting
+                    {formSending ? 'Sending…' : 'Request a Meeting'}
                   </button>
                   <p className="text-[9.5px] text-[#706858] leading-[1.65] tracking-[0.4px]">
                     By submitting this form, you agree that your information will
