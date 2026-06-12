@@ -189,7 +189,7 @@ export default function App() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [investment, setInvestment] = useState(100_000);
-  const [years, setYears] = useState(8);
+  const [years, setYears] = useState(5);
   const [heroCount, setHeroCount] = useState(0);
   const [formSent, setFormSent] = useState(false);
   const [formSending, setFormSending] = useState(false);
@@ -706,7 +706,7 @@ export default function App() {
               Investment Period
             </span>
             <div className="flex gap-2.5 flex-wrap mb-10">
-              {[1, 3, 8, 10, 15].map(y => (
+              {[1, 3, 5, 10, 15].map(y => (
                 <button
                   key={y}
                   onClick={() => setYears(y)}
@@ -761,6 +761,11 @@ export default function App() {
                 </div>
               ))}
             </div>
+
+            {/* Disclosure */}
+            <p className="text-center text-[10px] tracking-[2.5px] uppercase text-[#c9a84c]/75 mt-8">
+              ◆&nbsp;&nbsp;Past results do not guarantee future results&nbsp;&nbsp;◆
+            </p>
 
             {/* Growth chart */}
             <div className="mt-12">
