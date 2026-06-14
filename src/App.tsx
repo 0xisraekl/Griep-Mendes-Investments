@@ -619,6 +619,7 @@ export default function App() {
             <div className="bull-stage w-[clamp(200px,38vw,400px)] shrink-0">
               <video
                 src="/assets/bull-run.mp4"
+                poster="/assets/bull-idle.jpg"
                 muted
                 loop
                 playsInline
