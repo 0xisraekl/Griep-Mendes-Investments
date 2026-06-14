@@ -227,7 +227,9 @@ a {
   left: -150%; /* pan to the bull, stopping in the gap before the wordmark */
   top: -92.86%;
   mix-blend-mode: screen; /* drops the video's dark backdrop onto the hexagons */
-  filter: contrast(1.9) brightness(1.04) saturate(1.15);
+  /* Grade for rich gold while crushing the backdrop's mean toward black, so
+     `screen` has almost nothing left to lift inside the silhouette. */
+  filter: brightness(0.95) contrast(1.9) saturate(1.32);
   /* Trim the crop window itself (≈12px off the top, 8px off the right in
      stage units): the source scene's wordmark glow leaks a faint grey strip
      through the screen blend at the window's top-right. Safe on the video —
@@ -235,42 +237,24 @@ a {
      on the *stage* this would isolate (and kill) the blend. */
   -webkit-clip-path: inset(32.63% 59.66% 35.71% 24.49%);
   clip-path: inset(32.63% 59.66% 35.71% 24.49%);
-  /* The source backdrop isn't pure black — its ground-glow survives the
-     contrast crush and screen-lightens the hexagons into a faint fogged
-     rectangle. Feather the window's borders (≈7% ramps, sized so the idle
-     bull at 5.0s — margins 9–12% — stays fully opaque) so the residue
-     dissolves into the page instead of ending in a visible square edge.
-     Like clip-path, a mask on the video itself leaves the blend intact. */
-  -webkit-mask-image: linear-gradient(
-      to right,
-      transparent 24.49%,
-      #000 25.6%,
-      #000 39.23%,
-      transparent 40.34%
-    ),
-    linear-gradient(
-      to bottom,
-      transparent 32.63%,
-      #000 35.16%,
-      #000 62.07%,
-      transparent 64.29%
-    );
-  -webkit-mask-composite: source-in;
-  mask-image: linear-gradient(
-      to right,
-      transparent 24.49%,
-      #000 25.6%,
-      #000 39.23%,
-      transparent 40.34%
-    ),
-    linear-gradient(
-      to bottom,
-      transparent 32.63%,
-      #000 35.16%,
-      #000 62.07%,
-      transparent 64.29%
-    );
-  mask-composite: intersect;
+  /* A rectangular feather still leaves the dark crop window visible as a soft
+     square — worst of all on phones, where mobile Safari often refuses to
+     composite `mix-blend-mode` on a <video> and the whole rectangle shows.
+     Instead, mask the video to the bull's own silhouette (a feathered union of
+     every running frame, baked from the source — so it hugs the bull through
+     the full gallop without ever clipping a horn or hoof). Everything outside
+     the bull becomes truly transparent — no rectangle to see — on every
+     browser, blend support or not. Alpha masks are honoured even where the
+     blend is dropped. The mask spans the video's full frame 1:1, so it tracks
+     the bull regardless of the crop. */
+  -webkit-mask-image: url('/assets/bull-mask.png');
+  mask-image: url('/assets/bull-mask.png');
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-position: center;
+  mask-position: center;
 }
 
 /* ───────────────────────── Idle golden glint ─────────────────────────
@@ -334,28 +318,13 @@ a {
   }
 }
 
-/* The bull catches the light first: a gentle gleam on the video's own pixels.
-   Must restate the video's full base filter in every keyframe. */
-.is-idle .bull-stage video {
-  animation: bullGleam 7.5s ease-in-out 0.45s infinite;
-}
-@keyframes bullGleam {
-  0%,
-  22%,
-  100% {
-    filter: contrast(1.9) brightness(1.04) saturate(1.15);
-  }
-  9% {
-    /* keep contrast pinned — lowering it lifts the dark floor and the bull
-       washes out pale; a modest brightness swell keeps the gold rich */
-    filter: contrast(1.9) brightness(1.17) saturate(1.28);
-  }
-}
+/* The bull now gallops in place continuously (see the scroll effect in
+   App.tsx), so it needs no idle gleam of its own — the running motion is the
+   life. Only the wordmark carries the idle glint. */
 
 @media (prefers-reduced-motion: reduce) {
   .is-idle .glint-text--main,
-  .is-idle .glint-text--sub,
-  .is-idle .bull-stage video {
+  .is-idle .glint-text--sub {
     animation: none;
   }
 }

@@ -295,17 +295,18 @@ export default function App() {
     };
   }, []);
 
-  // Scroll-driven bull, smoothed in both directions: the stage glides toward
-  // its scroll target on a rAF loop (each wheel step lands as an ease, down
-  // and up alike) instead of snapping 1:1 with scrollY. Position still uses
-  // `left` (not transform) so the stage never gets a stacking context, which
-  // would break the video's screen-blend against the hexagons (see CSS).
+  // Hero bull: gallops in place while the hero is still, then runs off to the
+  // left as you scroll down. The stage glides toward its scroll target on a
+  // rAF loop (each wheel step lands as an ease, down and up alike) instead of
+  // snapping 1:1 with scrollY. Position uses `left` (not transform) so the
+  // stage never gets a stacking context, which would break the video's
+  // screen-blend against the hexagons (see CSS).
   //
-  // Playback stays inside the clip's clean segment, measured frame-by-frame:
-  // before ~1.5s the bull rides the right crop edge, past ~5.4s it hits the
-  // left edge, and the grading is richest gold from ~3.7s on. 5.0s is the
-  // hero pose. The bull only re-bases to the segment start at the moment it
-  // starts galloping, so the cut is masked by the onset of motion.
+  // Playback loops the clip's richest, steadiest segment, measured frame by
+  // frame: from ~3.7s the grading is deep gold and the bull's size barely
+  // changes, and by ~5.3s it nears the left crop edge — so [3.7, 5.3] gallops
+  // cleanly with the gentlest wrap. The silhouette mask (see CSS) hugs the
+  // bull across the whole window, so there is no crop rectangle to show.
   useEffect(() => {
     const video = document.querySelector<HTMLVideoElement>('.bull-stage video');
     const stage = document.querySelector<HTMLElement>('.bull-stage');
@@ -314,16 +315,16 @@ export default function App() {
     const reduceMotion = window.matchMedia(
       '(prefers-reduced-motion: reduce)',
     ).matches;
-    video.pause();
 
-    const PLAY_FROM = 1.5; // bull fully inside the crop from here…
-    const PLAY_TO = 5.4; // …until here
-    const IDLE_T = 5.0; // richest clean standing frame — the hero pose
-    const seekIdleFrame = () => {
-      video.currentTime = IDLE_T;
+    const PLAY_FROM = 3.7; // deep-gold, near-constant-size gallop window…
+    const PLAY_TO = 5.3; // …kept clear of the left crop edge
+    const intoSegment = () => {
+      if (video.currentTime < PLAY_FROM || video.currentTime > PLAY_TO) {
+        video.currentTime = PLAY_FROM;
+      }
     };
-    if (video.readyState >= 1) seekIdleFrame();
-    else video.addEventListener('loadedmetadata', seekIdleFrame, { once: true });
+    if (video.readyState >= 1) intoSegment();
+    else video.addEventListener('loadedmetadata', intoSegment, { once: true });
 
     const targetX = () =>
       -Math.min(Math.max(window.scrollY / window.innerHeight, 0), 1) *
@@ -332,6 +333,10 @@ export default function App() {
     // Pinned hero is fully buried once the next panel has scrolled one
     // viewport; past that nothing here can be seen, so nothing should run.
     const heroVisible = () => window.scrollY < window.innerHeight;
+    // Muted + playsInline, so this autoplays even on mobile.
+    const run = () => {
+      if (video.paused) video.play().catch(() => {});
+    };
 
     let cur = targetX();
     stage.style.left = `${cur.toFixed(2)}px`;
@@ -343,7 +348,7 @@ export default function App() {
     const setIdle = (on: boolean) => {
       if (on === idleOn) return;
       idleOn = on;
-      hero?.classList.toggle('is-idle', on);
+      hero?.classList.toggle('is-idle', on); // gates only the wordmark glint
     };
 
     const tick = (now: number) => {
@@ -355,18 +360,21 @@ export default function App() {
       cur = Math.abs(d) < 0.3 ? target : cur + d * (1 - Math.exp(-dt / 120));
       stage.style.left = `${cur.toFixed(2)}px`;
 
-      // Keep the gallop inside the clean segment, carrying the overshoot.
-      if (!video.paused && video.currentTime >= PLAY_TO) {
-        video.currentTime = PLAY_FROM + (video.currentTime - PLAY_TO);
+      // Loop the gallop segment seamlessly in time, carrying the overshoot.
+      if (video.currentTime >= PLAY_TO || video.currentTime < PLAY_FROM - 0.1) {
+        video.currentTime = PLAY_FROM + Math.max(0, video.currentTime - PLAY_TO);
       }
 
-      if (cur === target && now - lastScrollAt > 160) {
-        video.pause(); // settled — freeze the bull where it stands
-        setIdle(heroVisible()); // …and let the glint sweep, if it can be seen
+      // Glint sweeps the wordmark once the stage has settled and scrolling has
+      // paused; the bull keeps galloping underneath either way.
+      setIdle(cur === target && now - lastScrollAt > 160 && heroVisible());
+
+      if (heroVisible()) {
+        raf = requestAnimationFrame(tick);
+      } else {
+        video.pause(); // buried beneath the next panel → rest
         raf = 0;
-        return;
       }
-      raf = requestAnimationFrame(tick);
     };
     const wake = () => {
       if (!raf) {
@@ -383,14 +391,7 @@ export default function App() {
         return;
       }
       setIdle(false);
-      if (video.paused && heroVisible()) {
-        // Re-base only when frozen too close to the segment's end to gallop
-        // (or outside it); the jump hides inside the start of motion.
-        if (video.currentTime < PLAY_FROM || video.currentTime > PLAY_TO - 1.2) {
-          video.currentTime = PLAY_FROM;
-        }
-        video.play().catch(() => {});
-      }
+      if (heroVisible()) run();
       wake();
     };
     const onResize = () => {
@@ -399,15 +400,30 @@ export default function App() {
         stage.style.left = `${cur.toFixed(2)}px`;
         return;
       }
+      if (heroVisible()) run();
       wake();
     };
+    // If autoplay was blocked, the first user gesture starts the gallop.
+    const kick = () => {
+      if (heroVisible()) run();
+    };
 
-    setIdle(heroVisible()); // still on load → glint active (if hero shown)
+    if (reduceMotion) {
+      intoSegment(); // hold a deep-gold frame, no motion
+    } else {
+      run(); // gallop in place from load
+      wake();
+    }
+    setIdle(heroVisible());
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onResize);
+    window.addEventListener('pointerdown', kick, { passive: true });
+    window.addEventListener('touchstart', kick, { passive: true });
     return () => {
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', onResize);
+      window.removeEventListener('pointerdown', kick);
+      window.removeEventListener('touchstart', kick);
       if (raf) cancelAnimationFrame(raf);
     };
   }, []);
@@ -598,7 +614,14 @@ export default function App() {
               charging in big and to the left, beside a larger wordmark. */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-9 mb-[38px]">
             <div className="bull-stage w-[clamp(200px,38vw,400px)] shrink-0">
-              <video src="/assets/bull-run.mp4" muted loop playsInline preload="auto" />
+              <video
+                src="/assets/bull-run.mp4"
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="auto"
+              />
             </div>
             <div className="relative text-center sm:text-left">
               <div
