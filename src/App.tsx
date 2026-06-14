@@ -316,15 +316,30 @@ export default function App() {
       '(prefers-reduced-motion: reduce)',
     ).matches;
     video.pause(); // still until the first scroll
+    let hasScrolled = false;
 
     const PLAY_FROM = 1.5; // bull fully inside the crop from here…
     const PLAY_TO = 5.4; // …until here
     const IDLE_T = 5.0; // rich standing frame — the resting hero pose
-    const seekIdle = () => {
+    // Mobile browsers won't paint a <video> that has never played — a paused
+    // seek alone leaves the bull invisible on phones (and forever so if Reduce
+    // Motion is on, since scrolling then never plays it). So play it muted for
+    // an instant to decode a frame, then pause straight back on the idle pose:
+    // one still frame, no visible gallop, reduce-motion safe.
+    const showIdleFrame = () => {
       video.currentTime = IDLE_T;
+      const p = video.play();
+      if (p && typeof p.then === 'function') {
+        p.then(() => {
+          if (!hasScrolled) {
+            video.pause();
+            video.currentTime = IDLE_T;
+          }
+        }).catch(() => {});
+      }
     };
-    if (video.readyState >= 1) seekIdle();
-    else video.addEventListener('loadedmetadata', seekIdle, { once: true });
+    if (video.readyState >= 1) showIdleFrame();
+    else video.addEventListener('loadedmetadata', showIdleFrame, { once: true });
 
     const targetX = () =>
       -Math.min(Math.max(window.scrollY / window.innerHeight, 0), 1) *
@@ -380,6 +395,7 @@ export default function App() {
 
     const onScroll = () => {
       lastScrollAt = performance.now();
+      hasScrolled = true;
       if (reduceMotion) {
         cur = targetX();
         stage.style.left = `${cur.toFixed(2)}px`;
