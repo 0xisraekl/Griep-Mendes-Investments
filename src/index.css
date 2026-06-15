@@ -283,6 +283,9 @@ a {
   .bull-stage {
     aspect-ratio: auto;
     overflow: visible;
+    /* Smaller, tasteful on phones (~a third of the width, not half) */
+    width: clamp(108px, 32vw, 150px) !important;
+    margin: 0 auto 4px;
   }
   .bull-fallback {
     display: block;
@@ -290,6 +293,7 @@ a {
     inset: auto;
     width: 100%;
     height: auto; /* natural height from the image — always visible */
+    filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.45)); /* gentle depth */
   }
 }
 
