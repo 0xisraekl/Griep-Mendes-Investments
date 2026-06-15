@@ -277,8 +277,19 @@ a {
   .bull-stage video {
     display: none;
   }
+  /* Drop the cropped-video geometry: let the plain image size the stage so it
+     can never collapse to zero height (iOS won't give an aspect-ratio box a
+     height when its only child is absolutely positioned). */
+  .bull-stage {
+    aspect-ratio: auto;
+    overflow: visible;
+  }
   .bull-fallback {
     display: block;
+    position: relative;
+    inset: auto;
+    width: 100%;
+    height: auto; /* natural height from the image — always visible */
   }
 }
 
