@@ -257,6 +257,28 @@ a {
   mask-position: center;
 }
 
+/* Transparent bull cut-out for touch devices (iOS can't blend/mask a <video>,
+   so the video's dark window shows as a square). A plain transparent PNG has
+   no backdrop to hide — no box on any phone. Desktop keeps the gallop video. */
+.bull-fallback {
+  display: none;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.5));
+}
+@media (hover: none) and (pointer: coarse) {
+  .bull-stage video {
+    display: none;
+  }
+  .bull-fallback {
+    display: block;
+  }
+}
+
 /* ───────────────────────── Idle golden glint ─────────────────────────
    While the hero sits still (`.is-idle`), one soft gold light passes through
    the lockup. The letters carry the glint inside their own glyphs

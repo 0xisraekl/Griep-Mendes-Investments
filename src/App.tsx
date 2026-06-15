@@ -625,6 +625,13 @@ export default function App() {
                 playsInline
                 preload="auto"
               />
+              {/* iOS Safari renders <video> in a separate layer that ignores
+                  BOTH mix-blend-mode and mask-image, so the video's dark crop
+                  window shows as a square no matter what. On touch devices we
+                  drop the video entirely and show the transparent bull cut-out
+                  (a plain <img> needs no blend or mask — never a box). It still
+                  slides left on scroll via the stage's `left` offset. */}
+              <img className="bull-fallback" src="/assets/bull.png" alt="Griep Mendes bull" />
             </div>
             <div className="relative text-center sm:text-left">
               <div
