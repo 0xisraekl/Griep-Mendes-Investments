@@ -312,6 +312,18 @@ export default function App() {
     const stage = document.querySelector<HTMLElement>('.bull-stage');
     const hero = document.getElementById('hero');
     if (!video || !stage) return;
+
+    // On mobile the bull is the static fallback image — keep it perfectly still
+    // (no scroll-driven leftward run); just let the gentle idle glint sweep.
+    const isMobile = window.matchMedia(
+      '(hover: none) and (pointer: coarse), (max-width: 820px)',
+    ).matches;
+    if (isMobile) {
+      stage.style.left = '0px';
+      hero?.classList.add('is-idle');
+      return;
+    }
+
     const reduceMotion = window.matchMedia(
       '(prefers-reduced-motion: reduce)',
     ).matches;
